@@ -1,0 +1,11 @@
+[project]
+name = "cut-the-rope-tv"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mediapipe>=0.10.32",
+    "opencv-python>=4.13.0.92",
+    "ruff>=0.15.5",
+]
