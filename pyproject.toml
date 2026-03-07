@@ -5,7 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "ipykernel>=7.2.0",
     "mediapipe>=0.10.32",
     "opencv-python>=4.13.0.92",
+    "pyautogui>=0.9.54",
     "ruff>=0.15.5",
 ]
+
+[tool.basedpyright]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "strict"
+ignore = ["**/__pycache__"]
+reportAttributeAccessIssue = "none"
