@@ -1,7 +1,8 @@
+import time
+
 import cv2 as cv
 import mediapipe as mp
 import pyautogui
-import time
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
@@ -14,8 +15,11 @@ GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
 
 screen_width, screen_height = 0, 0
-latest_gesture = None
+latest_gesture = "None"
 latest_landmarks = None
+first_drag = False
+bottom_margin = .75
+top_margin = .1
 
 
 # get monitor specs to use and setup hand tracking software also
@@ -59,10 +63,9 @@ def result_callback(
     # realistically the gesture will never be NONE since user will have closed fist
     # we dont care about handedness, only gestures, and landmarks
 
-    global latest_gesture, latest_landmarks
-
+    global latest_gesture, latest_landmarks, first_drag, top_margin, bottom_margin
     if not result.gestures:
-        latest_gesture = None
+        latest_gesture = "None"
         latest_landmarks = None
         return
 
@@ -74,22 +77,43 @@ def result_callback(
     if gestureName == "Pointing_Up":
         # x and y derives from landmark position
         # duration should be 0 so its somewhat immediate
+        # 1/(7/8 - 1/10)
+
+        if result.hand_landmarks[-1][8].y < top_margin:
+            return
+        if result.hand_landmarks[-1][8].y > bottom_margin:
+            return
+
         point_x, point_y = (
             screen_width * result.hand_landmarks[-1][8].x,
-            screen_height * result.hand_landmarks[-1][8].y,
+            (screen_height * (result.hand_landmarks[-1][8].y - top_margin)) * 1./(bottom_margin - top_margin),
         )
-        pyautogui.dragTo(point_x, point_y, duration=0, button="left")
+        if first_drag is False:
+            first_drag = True
+            pyautogui.mouseDown(point_x, point_y)
 
-    elif gestureName == "Closed_Fist":
+        pyautogui.moveTo(point_x, point_y, duration=0)
+    elif gestureName != "Pointing_Up":
+        if first_drag is True:
+            pyautogui.mouseUp()
+            first_drag = False
+
+    if gestureName == "Closed_Fist":
         # want to click once
+        if result.hand_landmarks[-1][8].y < top_margin:
+            return
+        if result.hand_landmarks[-1][8].y > bottom_margin:
+            return
         point_x, point_y = (
             screen_width * result.hand_landmarks[-1][4].x,
-            screen_height * result.hand_landmarks[-1][4].y,
+             (screen_height * (result.hand_landmarks[-1][4].y - top_margin)) * 1./(bottom_margin - top_margin),
         )
         pyautogui.click(x=point_x, y=point_y, clicks=1, interval=0, button="left")
 
+
 # we can use the following gesture 👆 from
 # https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer/python
+
 
 # control mouse movements
 def main():
@@ -114,20 +138,27 @@ def main():
         # args: image, top left corner, bottom right corner,color, thickness
         # convert image to mp format
         frame = cv.flip(frame, 1)
+        # resize the image
+        frame = cv.resize(frame, (1280, 720))
+
+        h, w, _ = frame.shape
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
         recognizer.recognize_async(mp_image, timestamp)
 
         # draw overlay in main thread
         display = frame.copy()
         h, w, _ = display.shape
-        
+
         mp_drawing.draw_landmarks(
             display,
             latest_landmarks,
             mp_hands.HAND_CONNECTIONS,
             mp_drawing_styles.get_default_hand_landmarks_style(),
-            mp_drawing_styles.get_default_hand_connections_style()
+            mp_drawing_styles.get_default_hand_connections_style(),
         )
+
+        cv.rectangle(display, (0, int(h * top_margin)), (w, int(h * bottom_margin)), (0, 0, 255), 2)
+        cv.putText(display, latest_gesture, (20, int(h * top_margin + 30)), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         cv.imshow("Hand Gesture Recognition with MediaPipe", display)
         # use esc key to close application
