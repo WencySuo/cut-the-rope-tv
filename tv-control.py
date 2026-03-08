@@ -252,7 +252,6 @@ def result_callback(
         # here this move to should be dragging the entire time,
         # note that usually we need to end the drag by moving drag=0 some position
         # we can most likely do this whenever we are moving again which would be with closed fist
-
     if gestureName == "Closed_Fist":
         # want to click once
         if result.hand_landmarks[-1][8].y < top_margin:
@@ -276,7 +275,7 @@ def result_callback(
         else:
             # when its been more than 5.5 seconds since the last gesture the mouse disappears
             # and the position is reset to the center aka 0,0
-            move_arb_distance(int(point_x), int(point_y), drag=1)
+            move_arb_distance(int(point_x), int(point_y), drag=0)
         inp.click()
         cursor_x, cursor_y = point_x, point_y
 
