@@ -30,7 +30,6 @@ cv.imwrite(image_name, charuco_board_image)
 
 # ========== CODE TO CALIBRATE CAMERA ============
 
-
 def calibrate(
     cap, charuco_board, charuco_detector, total_image_points, total_object_points
 ):
