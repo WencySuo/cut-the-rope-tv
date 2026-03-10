@@ -249,8 +249,46 @@ def result_callback(
         move_arb_distance(int(point_x), int(point_y), drag=1)
     cursor_x, cursor_y = point_x, point_y
 
+<<<<<<< Updated upstream
     # TODO: differentiate between drag and click via time delta
     if time_delta >= 10:
+=======
+        # in WEBOS the point_x and point_y are (0,0) at the middle,
+        # thus we substract half the screen width and height to get the correct position
+        point_x -= screen_width / 2
+        point_y -= screen_height / 2
+
+        now = datetime.datetime.now()
+        if last_gesture_time is None:
+            time_delta = 10
+        else:
+            time_delta = (now - last_gesture_time).total_seconds()
+        last_gesture_time = now
+
+        print("The point is at:", point_x, point_y)
+        print("The cursor is at:", cursor_x, cursor_y)
+        print(" The difference is", int(point_x - cursor_x), int(point_y - cursor_y))
+        print()
+
+        if time_delta < 5.5:
+            move_arb_distance(int(point_x - cursor_x), int(point_y - cursor_y), drag=1)
+        else:
+            move_arb_distance(int(point_x), int(point_y), drag=1)
+        cursor_x, cursor_y = point_x, point_y
+
+        # TODO: no longer need to mark first_drag as mousedown in WebOS
+        # however we do need to track the position of the cursor at all times
+        # if first_drag is False:
+        #     first_drag = True
+        #     pyautogui.mouseDown(point_x, point_y)
+
+        # here this move to should be dragging the entire time,
+        # note that usually we need to end the drag by moving drag=0 some position
+        # we can most likely do this whenever we are moving again which would be with closed fist
+
+    elif if gestureName == "Closed_Fist":
+        # want to click once
+>>>>>>> Stashed changes
         if result.hand_landmarks[-1][8].y < top_margin:
             return
         if result.hand_landmarks[-1][8].y > bottom_margin:
@@ -275,6 +313,7 @@ def result_callback(
             move_arb_distance(int(point_x), int(point_y), drag=0)
         inp.click()
         cursor_x, cursor_y = point_x, point_y
+<<<<<<< Updated upstream
 
     # if gestureName == "Pointing_Up":
     #     # x and y derives from landmark position
@@ -352,6 +391,12 @@ def result_callback(
     #     inp.click()
     #     cursor_x, cursor_y = point_x, point_y
 
+=======
+    else:
+        #reset dragging to prevent dangling mouse up
+        if last_gesture == "Pointing_up":
+            move_arb_distance(0,0, drag=0)
+>>>>>>> Stashed changes
 
 # we can use the following gesture 👆 from
 # https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer/python
